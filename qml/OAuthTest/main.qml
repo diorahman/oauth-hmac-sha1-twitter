@@ -12,8 +12,8 @@ Rectangle {
 
     Twitter{
         id: twitter
-        consumerKey: "W3f50lSJiI00CDVg6UwhxQ"
-        consumerSecret: "CHPWgrNu1wanwvSXax3b7FQarXBgVeZXUFysD4yZKXg"
+        consumerKey: ""
+        consumerSecret: ""
     }
 
     MouseArea {

@@ -51,7 +51,7 @@ void Twitter::onRequestTokenReceived(const Params &params, const QString & raw)
     m_tempOAuthToken = params.value("oauth_token");
     m_tempOAuthTokenSecret = params.value("oauth_token_secret");
 
-    authorize("aegislabs","aegis10201", m_tempOAuthToken);
+    authorize("","", m_tempOAuthToken);
 
 }
 
