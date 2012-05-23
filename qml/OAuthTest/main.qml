@@ -12,14 +12,14 @@ Rectangle {
 
     Twitter{
         id: twitter
-        consumerKey: ""
-        consumerSecret: ""
+        consumerKey: "1RWjs9F86SZIWULRwlDWEw"
+        consumerSecret: "8f2m0BcEewdvH4NKjA6c5q7snmdVM3zcSz7RsGcm8"
     }
 
     MouseArea {
         anchors.fill: parent
         onClicked: {
-            twitter.testResource();
+            twitter.testUploadImage();
         }
     }
 }

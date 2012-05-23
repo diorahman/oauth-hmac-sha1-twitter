@@ -15,6 +15,7 @@ class OAuth : public QObject
     Q_PROPERTY(QString oauthToken READ oauthToken WRITE setOauthToken NOTIFY oauthTokenChanged)
     Q_PROPERTY(QString oauthTokenSecret READ oauthTokenSecret WRITE setOauthTokenSecret NOTIFY oauthTokenSecretChanged)
     Q_PROPERTY(QString callbackUrl READ callbackUrl WRITE setCallbackUrl NOTIFY callbackUrlChanged)
+    Q_PROPERTY(QString mutipartBoundary READ mutipartBoundary)
 
     Q_DECLARE_PRIVATE(OAuth)
 
@@ -60,6 +61,8 @@ public:
     QString oauthToken();
     QString oauthTokenSecret();
     QString callbackUrl();
+
+    QString mutipartBoundary();
 
 protected:
     OAuthPrivate * const d_ptr;

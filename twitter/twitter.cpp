@@ -1,7 +1,13 @@
 #include "twitter.h"
 #include <QDebug>
 #include "page.h"
+
+#include <QFile>
+#include <QFileInfo>
+
 #include "QJson/qjson.h"
+
+#include "oauth_helper.h"
 
 const static QString TwitterRequestTokenUrl("https://api.twitter.com/oauth/request_token");
 const static QString TwitterAuthorizeUrl("https://api.twitter.com/oauth/authorize");
@@ -23,8 +29,11 @@ Twitter::Twitter(QObject *parent) :
 
 void Twitter::testResource()
 {
-    m_oAuthToken = "17058778-5NPWqWK0SneVGEzZbFfIyulBVfKpRd4YV5gMB9J8";
-    m_oAuthTokenSecret = "3kGtuFZ5ZPNyxu6guO1qaC5d3Da8i1vnEehWAeAFg";
+    //m_oAuthToken = "17058778-5NPWqWK0SneVGEzZbFfIyulBVfKpRd4YV5gMB9J8";
+    //m_oAuthTokenSecret = "3kGtuFZ5ZPNyxu6guO1qaC5d3Da8i1vnEehWAeAFg";
+
+    m_oAuthToken = "222985359-LODFDMHKy4gYU1NncP5PqYqrKKZxdLCIBmhw7jR3";
+    m_oAuthTokenSecret = "DwA9I6gjj1E0QoGZhYqASoBGH0THuS13VNQjZNaho0M";
 
     this->setOauthToken(m_oAuthToken);
     this->setOauthTokenSecret(m_oAuthTokenSecret);
@@ -38,6 +47,37 @@ void Twitter::testResource()
 
     data.insert("include_entities","true");
     resource("https://api.twitter.com/1/statuses/home_timeline.json", "GET", data);
+}
+
+void Twitter::testUploadImage()
+{
+
+    m_oAuthToken = "222985359-LODFDMHKy4gYU1NncP5PqYqrKKZxdLCIBmhw7jR3";
+    m_oAuthTokenSecret = "DwA9I6gjj1E0QoGZhYqASoBGH0THuS13VNQjZNaho0M";
+
+    this->setOauthToken(m_oAuthToken);
+    this->setOauthTokenSecret(m_oAuthTokenSecret);
+
+    QFile file("/Users/diorahman/Develop/hack/OAuthTest/images/qt.png");
+    file.open(QIODevice::ReadOnly);
+
+    Part imagePart;
+    imagePart.contentDisposition = "name=\"media[]\"; filename=\"1234.png\"";
+    imagePart.contentType = "application/octet-stream";
+    imagePart.data = file.readAll();
+
+    Part statusPart;
+    statusPart.contentDisposition = "name=\"status\"";
+    statusPart.contentType = "";
+    statusPart.data = "Abrakadabra";
+
+    Parts parts;
+    parts.insert("image", imagePart);
+    parts.insert("status", statusPart);
+
+    QByteArray data = Helper::buildMultipartBody(this->mutipartBoundary(), parts);
+
+     resource("https://upload.twitter.com/1/statuses/update_with_media.json", "POST", Params(), data);
 }
 
 void Twitter::onRequestTokenReceived(const Params &params, const QString & raw)

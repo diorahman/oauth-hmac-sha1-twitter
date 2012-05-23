@@ -10,7 +10,7 @@
 
 #include <QDebug>
 
-OAuthPrivate::OAuthPrivate(OAuth * publicAPI) : q_ptr(publicAPI)
+OAuthPrivate::OAuthPrivate(OAuth * publicAPI) : multipartBound(QString("---------------------------") + Helper::identifier(24)), q_ptr(publicAPI)
 {
     nam = new QNetworkAccessManager(this);
     config = new QSslConfiguration(QSslConfiguration::defaultConfiguration());
@@ -42,16 +42,17 @@ QString OAuthPrivate::signingKey(const QString & consumerSecretKey, const QStrin
 }
 
 QString OAuthPrivate::signature(const QString signingKeyStr, const QString & baseStr){
-    return hmacSha1Base64(signingKeyStr, baseStr);
+    return Helper::hmacSha1Base64(signingKeyStr, baseStr);
 }
 
 QString OAuthPrivate::buildAuthHeader(const QString & method, const QString & url, const Params & data, const QString & verifier)
 {
     QMap<QString, QString> params;
+
     params.insert("oauth_consumer_key", consumerKey.toAscii());
-    params.insert("oauth_nonce", identifier(42));
+    params.insert("oauth_nonce", Helper::identifier(42));
     params.insert("oauth_signature_method", "HMAC-SHA1");
-    params.insert("oauth_timestamp", QString("%1").arg(timestamp()));
+    params.insert("oauth_timestamp", QString("%1").arg(Helper::timestamp()));
     params.insert("oauth_version", "1.0");
 
     if(!verifier.isEmpty())
@@ -123,29 +124,40 @@ void OAuthPrivate::accessToken(const QString & url, const QString & verifier){
 
 void OAuthPrivate::resource(const QString &url, const QString &method, const Params &params, const QByteArray &rawParams)
 {
-    qDebug() << "asking for resource";
 
+    qDebug() << "header";
 
     QPair<QNetworkRequest, QString> r = buildRequest(method, url, buildAuthHeader(method, url, params), params);
     QNetworkRequest request = r.first;
     request.setAttribute(QNetworkRequest::User, Resource);
 
-    QNetworkReply * reply = 0;
+    oauthReply = 0;
 
     if(method.toUpper() == "POST"){
-        reply = nam->post(request, r.second.toAscii());
+
+        if(rawParams.length()){
+            if(rawParams.contains("Content-Disposition")){
+                request.setRawHeader(QString("Content-Type").toAscii(),QString("multipart/form-data; boundary=" + multipartBound).toAscii());
+            }
+
+            request.setRawHeader(QString("Content-Length").toAscii(), QString::number(rawParams.length()).toAscii());
+            oauthReply = nam->post(request, rawParams);
+
+        }else{
+            oauthReply = nam->post(request, r.second.toAscii());
+        }
+
     }else if(method.toUpper() == "PUT"){
-        reply = nam->post(request, r.second.toAscii());
+        oauthReply = nam->put(request, r.second.toAscii());
     }else if(method.toUpper() == "DELETE"){
-        reply = nam->deleteResource(request);
+        oauthReply = nam->deleteResource(request);
     }else{
-        reply = nam->get(request);
+        oauthReply = nam->get(request);
     }
 
-    if(reply){
-        qDebug() << "do request";
-        reply->setSslConfiguration(* config);
-        connect(reply, SIGNAL(finished()), SLOT(reply()));
+    if(oauthReply){
+        oauthReply->setSslConfiguration(* config);
+        connect(oauthReply, SIGNAL(finished()), SLOT(reply()));
     }
 }
 
@@ -154,22 +166,24 @@ void OAuthPrivate::reply(){
     QNetworkReply * r = qobject_cast<QNetworkReply * >(sender());
     QString data = r->readAll();
 
-    qDebug() << data;
-    qDebug() << r->error();
-    qDebug() << r->errorString();
+    qDebug() << "data: " << data;
+    qDebug() << "error: " << r->error();
+    qDebug() << "errorstring: " << r->errorString();
 
     Q_Q(OAuth);
 
     if(r->error() == QNetworkReply::NoError){
         if(r->request().attribute(QNetworkRequest::User).toInt() == RequestToken){
-            emit q->requestTokenReceived(qsToMap(data), data);
+            emit q->requestTokenReceived(Helper::qsToMap(data), data);
         }else if(r->request().attribute(QNetworkRequest::User).toInt() == AccessToken){
-            emit q->accessTokenReceived(qsToMap(data), data);
+            emit q->accessTokenReceived(Helper::qsToMap(data), data);
         }else{
             emit q->resourceReceived(data);
         }
     }else{
         emit q->errorOccurred(data);
     }
+
+    oauthReply->deleteLater();
 
 }

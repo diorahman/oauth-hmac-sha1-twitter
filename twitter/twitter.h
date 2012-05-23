@@ -5,6 +5,7 @@
 #include "oauth.h"
 #include "oauth_types.h"
 
+
 class Page;
 class QJson;
 
@@ -15,6 +16,8 @@ public:
     explicit Twitter(QObject *parent = 0);
     
     Q_INVOKABLE void testResource();
+
+    Q_INVOKABLE void testUploadImage();
     
 private slots:
     void onRequestTokenReceived(const Params & params, const QString & raw);

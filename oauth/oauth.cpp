@@ -90,10 +90,31 @@ void OAuth::setCallbackUrl(const QString & aCallbackUrl){
 
 }
 
-QString OAuth::consumerKey(){}
-QString OAuth::consumerSecret(){}
-QString OAuth::oauthToken(){}
-QString OAuth::oauthTokenSecret(){}
-QString OAuth::callbackUrl(){}
+QString OAuth::consumerKey(){
+    Q_D(OAuth);
+    return d->consumerKey;
+}
+QString OAuth::consumerSecret(){
+    Q_D(OAuth);
+    return d->consumerSecret;
+}
+QString OAuth::oauthToken(){
+    Q_D(OAuth);
+    return d->oauthToken;
+}
+QString OAuth::oauthTokenSecret(){
+    Q_D(OAuth);
+    return d->oauthTokenSecret;
+}
+QString OAuth::callbackUrl(){
+    Q_D(OAuth);
+    return d->callbackUrl;
+}
+
+QString OAuth::mutipartBoundary()
+{
+    Q_D(OAuth);
+    return d->multipartBound;
+}
 
 

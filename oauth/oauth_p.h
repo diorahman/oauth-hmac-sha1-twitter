@@ -6,6 +6,7 @@
 #include "oauth_types.h"
 
 class QNetworkAccessManager;
+class QNetworkReply;
 class QSslConfiguration;
 class OAuth;
 
@@ -16,7 +17,7 @@ class OAuthPrivate : public QObject
 
 public:
     explicit OAuthPrivate(OAuth *parent = 0);
-    enum RequestType { RequestToken, AccessToken, Resource};
+    enum RequestType { RequestToken, AccessToken, Resource, ResourceStream};
 
 public:
     QString consumerKey;
@@ -24,11 +25,13 @@ public:
     QString oauthToken;
     QString oauthTokenSecret;
     QString callbackUrl;
+    QString multipartBound;
 
 private:
     QNetworkAccessManager * nam;
     OAuth * const q_ptr;
     QSslConfiguration * config;
+    QNetworkReply * oauthReply;
 
 private slots:
     QString paramsString(const Params & params);

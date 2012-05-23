@@ -10,7 +10,10 @@
 #include <qmath.h>
 #include "oauth_types.h"
 
-Params qsToMap(const QString & qs){
+namespace Helper{
+
+
+static Params qsToMap(const QString & qs){
 
     QMap<QString, QString> m;
     QStringList l = qs.split("&");
@@ -23,18 +26,40 @@ Params qsToMap(const QString & qs){
     return m;
 }
 
-int chr(const QString & s){
+static QByteArray buildMultipartBody(const QString bound, Parts params)
+{
+
+    QByteArray data(QString("--"+bound+"\r\n").toAscii());
+
+    Parts::iterator p;
+    for (p = params.begin(); p != params.end(); ++p){
+
+        Part part = p.value();
+        data += "Content-Disposition: form-data;";
+        data += " " + part.contentDisposition + "\r\n";
+        if(part.contentType.length()) data += part.contentType + "\r\n";
+        data += "\r\n";
+        data += part.data;
+        data += "\r\n";
+
+        data += QString("--" + bound + "\r\n").toAscii();
+    }
+
+    return data.mid(0 , data.length() - 2) + "--";
+}
+
+static int chr(const QString & s){
     return (int) ((QChar) s.at(0).toAscii()).toAscii();
 }
 
-QString pick(const QList<int> & xs){
+static QString pick(const QList<int> & xs){
     int x = xs.at(qFloor(((qrand() + 0.0)/RAND_MAX) * xs.length()));
     return QString(QChar(x));
 }
 
-qint64 timestamp(){ return qFloor(QDateTime::currentMSecsSinceEpoch()/1000.0);}
+static qint64 timestamp(){ return qFloor(QDateTime::currentMSecsSinceEpoch()/1000.0);}
 
-QString identifier(const int & n, const bool & f = false){
+static QString identifier(const int & n, const bool & f = false){
 
     QTime time = QTime::currentTime();
     qsrand((uint)time.msec());
@@ -55,7 +80,7 @@ QString identifier(const int & n, const bool & f = false){
     return output;
 }
 
-QString hmacSha1Base64(const QString & key, const QString & data){
+static QString hmacSha1Base64(const QString & key, const QString & data){
 
     QByteArray ipad;
     QByteArray opad;
@@ -103,5 +128,11 @@ QString hmacSha1Base64(const QString & key, const QString & data){
 
     return sha1.toBase64();
 }
+
+
+
+}
+
+
 
 #endif // OAUTH_HELPER_H
